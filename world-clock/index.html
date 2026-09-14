@@ -272,14 +272,16 @@ async function fetchWeather(){
     if(rows.length !== clocks.length) throw new Error("Unexpected weather response");
 
     rows.forEach((row,index) => {
-      const temp = row?.current?.temperature_2m;
+      const tempF = row?.current?.temperature_2m;
       const code = row?.current?.weather_code;
 
-      if(typeof temp !== "number" || typeof code !== "number") {
+      if(typeof tempF !== "number" || typeof code !== "number") {
         throw new Error(`Missing weather data for ${clocks[index].name}`);
       }
 
-      weatherEls[index].textContent = `${Math.round(temp)}°  ${weatherLabel(code)}`;
+      const roundedF = Math.round(tempF);
+      const roundedC = Math.round((tempF - 32) * 5 / 9);
+      weatherEls[index].textContent = `${roundedF}°F · ${roundedC}°C  ${weatherLabel(code)}`;
     });
   }catch(error){
     console.error(error);
