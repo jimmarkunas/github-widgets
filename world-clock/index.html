@@ -12,7 +12,16 @@
     --subtle:#7f878d;
     --gap:10px;
     --radius:16px;
+    --page-bg:#ffffff;
+    color-scheme:light dark;
   }
+
+  @media (prefers-color-scheme: dark){
+    :root{--page-bg:#191919;}
+  }
+
+  :root[data-theme="light"]{--page-bg:#ffffff;}
+  :root[data-theme="dark"]{--page-bg:#191919;}
 
   *{box-sizing:border-box}
 
@@ -22,8 +31,7 @@
     padding:0;
     width:100%;
     min-height:100%;
-    background:rgba(0,0,0,0) !important;
-    background-color:transparent !important;
+    background:var(--page-bg) !important;
     font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Inter,Roboto,Arial,sans-serif;
   }
 
@@ -34,7 +42,7 @@
     grid-template-columns:repeat(7,minmax(126px,1fr));
     gap:var(--gap);
     width:100%;
-    background:transparent !important;
+    background:var(--page-bg) !important;
     overflow-x:auto;
     scrollbar-width:none;
   }
@@ -126,6 +134,11 @@
 <div class="clock-grid" id="clockGrid" aria-label="World clocks"></div>
 
 <script>
+const themeOverride = new URLSearchParams(location.search).get("theme");
+if(themeOverride === "dark" || themeOverride === "light"){
+  document.documentElement.dataset.theme = themeOverride;
+}
+
 const BASELINE_ZONE = "America/Chicago";
 const WEATHER_REFRESH_MS = 15 * 60 * 1000;
 
