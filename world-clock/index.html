@@ -3,20 +3,21 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>World Clock</title>
+<title>World Clock + Weather</title>
 <style>
   :root{
-    --ink:#222222;
-    --text:#f3f3f3;
-    --muted:#aeb5ba;
-    --subtle:#7f878d;
-    --gap:10px;
-    --radius:16px;
     --page-bg:#ffffff;
+    --card:#222222;
+    --text:#f3f3f3;
+    --muted:#b8bdc1;
+    --quiet:#858b90;
+    --line:rgba(255,255,255,.11);
+    --gap:10px;
+    --radius:18px;
     color-scheme:light dark;
   }
 
-  @media (prefers-color-scheme: dark){
+  @media (prefers-color-scheme:dark){
     :root{--page-bg:#191919;}
   }
 
@@ -37,101 +38,171 @@
 
   body{padding:6px}
 
-  .clock-grid{
+  .world-grid{
     display:grid;
-    grid-template-columns:repeat(7,minmax(126px,1fr));
+    grid-template-columns:repeat(7,minmax(142px,1fr));
     gap:var(--gap);
     width:100%;
-    background:var(--page-bg) !important;
     overflow-x:auto;
     scrollbar-width:none;
   }
 
-  .clock-grid::-webkit-scrollbar{display:none}
+  .world-grid::-webkit-scrollbar{display:none}
 
-  .clock{
-    height:132px;
-    min-width:126px;
+  .city-card{
+    min-width:142px;
+    height:206px;
+    padding:15px 13px 13px;
+    border:1px solid rgba(255,255,255,.04);
     border-radius:var(--radius);
-    background:var(--ink);
+    background:var(--card);
+    color:var(--text);
     display:flex;
     flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    padding:12px 8px 10px;
     overflow:hidden;
   }
 
   .city{
-    width:100%;
-    margin-bottom:8px;
     text-align:center;
-    font-size:13px;
-    line-height:1.1;
-    font-weight:700;
     color:var(--text);
+    font-size:12px;
+    line-height:1.15;
+    font-weight:760;
+    letter-spacing:.055em;
+    text-transform:uppercase;
     white-space:nowrap;
     overflow:hidden;
     text-overflow:ellipsis;
   }
 
-  .time-row{
+  .time-wrap{
     display:flex;
-    align-items:baseline;
+    align-items:flex-end;
     justify-content:center;
     gap:5px;
-    width:100%;
+    margin-top:9px;
     white-space:nowrap;
   }
 
   .time{
-    font-size:34px;
-    line-height:.95;
-    font-weight:760;
+    font-size:32px;
+    line-height:.92;
+    font-weight:720;
     letter-spacing:-.055em;
     font-variant-numeric:tabular-nums;
-    color:var(--text);
   }
 
   .ampm{
-    font-size:10px;
-    font-weight:750;
-    letter-spacing:.04em;
+    padding-bottom:2px;
     color:var(--muted);
+    font-size:9px;
+    line-height:1;
+    font-weight:760;
+    letter-spacing:.055em;
   }
 
-  .weather{
-    margin-top:10px;
-    max-width:100%;
-    min-height:16px;
-    color:var(--muted);
-    font-size:11px;
+  .time-label{
+    margin-top:6px;
+    text-align:center;
+    color:var(--quiet);
+    font-size:8px;
     line-height:1;
-    font-weight:650;
+    font-weight:760;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+  }
+
+  .divider{
+    height:1px;
+    margin:12px 0 10px;
+    background:var(--line);
+  }
+
+  .weather-row{
+    display:grid;
+    grid-template-columns:38px 1fr;
+    align-items:center;
+    gap:8px;
+    min-height:45px;
+  }
+
+  .weather-icon{
+    width:38px;
+    height:38px;
+    display:grid;
+    place-items:center;
+    color:var(--text);
+  }
+
+  .weather-icon svg{
+    width:36px;
+    height:36px;
+    display:block;
+  }
+
+  .temperature-row{
+    display:flex;
+    align-items:baseline;
+    gap:5px;
+    min-width:0;
+  }
+
+  .temp-f{
+    font-size:27px;
+    line-height:.95;
+    font-weight:720;
+    letter-spacing:-.045em;
+    white-space:nowrap;
+  }
+
+  .temp-c{
+    color:var(--muted);
+    font-size:10px;
+    line-height:1;
+    font-weight:680;
+    white-space:nowrap;
+  }
+
+  .condition{
+    margin-top:3px;
+    color:var(--muted);
+    font-size:10px;
+    line-height:1.15;
+    font-weight:620;
     white-space:nowrap;
     overflow:hidden;
     text-overflow:ellipsis;
   }
 
-  .offset{
-    margin-top:7px;
+  .meta{
+    margin-top:auto;
+    display:flex;
+    justify-content:center;
     min-height:12px;
-    color:var(--subtle);
-    font-size:10px;
+    color:var(--quiet);
+    font-size:9px;
     line-height:1;
     font-weight:650;
+    white-space:nowrap;
   }
 
   @media (min-width:1180px){
-    .clock{height:138px}
-    .city{font-size:14px}
-    .time{font-size:38px}
-    .weather{font-size:12px}
+    .world-grid{grid-template-columns:repeat(7,minmax(150px,1fr))}
+    .city-card{min-width:150px;height:212px;padding:16px 14px 14px}
+    .city{font-size:12.5px}
+    .time{font-size:35px}
+    .temp-f{font-size:29px}
+    .condition{font-size:10.5px}
+  }
+
+  @media (max-width:700px){
+    body{padding:4px}
+    .world-grid{gap:8px}
   }
 </style>
 </head>
 <body>
-<div class="clock-grid" id="clockGrid" aria-label="World clocks"></div>
+<div class="world-grid" id="worldGrid" aria-label="World clock and weather"></div>
 
 <script>
 const themeOverride = new URLSearchParams(location.search).get("theme");
@@ -142,30 +213,41 @@ if(themeOverride === "dark" || themeOverride === "light"){
 const BASELINE_ZONE = "America/Chicago";
 const WEATHER_REFRESH_MS = 15 * 60 * 1000;
 
-const clocks = [
-  { name:"Honolulu",    zone:"Pacific/Honolulu",    lat:21.3069, lon:-157.8583 },
-  { name:"Los Angeles", zone:"America/Los_Angeles", lat:34.0522, lon:-118.2437 },
-  { name:"Denver",      zone:"America/Denver",      lat:39.7392, lon:-104.9903 },
-  { name:"Chicago",     zone:"America/Chicago",     lat:41.8781, lon:-87.6298 },
-  { name:"New York",    zone:"America/New_York",    lat:40.7128, lon:-74.0060 },
-  { name:"London",      zone:"Europe/London",       lat:51.5074, lon:-0.1278 },
-  { name:"Paris",       zone:"Europe/Paris",        lat:48.8566, lon:2.3522 }
+const cities = [
+  {name:"Honolulu",zone:"Pacific/Honolulu",lat:21.3069,lon:-157.8583},
+  {name:"Los Angeles",zone:"America/Los_Angeles",lat:34.0522,lon:-118.2437},
+  {name:"Denver",zone:"America/Denver",lat:39.7392,lon:-104.9903},
+  {name:"Chicago",zone:"America/Chicago",lat:41.8781,lon:-87.6298},
+  {name:"New York",zone:"America/New_York",lat:40.7128,lon:-74.0060},
+  {name:"London",zone:"Europe/London",lat:51.5074,lon:-0.1278},
+  {name:"Paris",zone:"Europe/Paris",lat:48.8566,lon:2.3522}
 ];
 
-const grid = document.getElementById("clockGrid");
+const grid = document.getElementById("worldGrid");
 
 function build(){
-  clocks.forEach((clock,index) => {
+  cities.forEach((city,index) => {
     const card = document.createElement("section");
-    card.className = "clock";
+    card.className = "city-card";
     card.innerHTML = `
-      <div class="city">${clock.name}</div>
-      <div class="time-row">
+      <div class="city">${city.name}</div>
+      <div class="time-wrap">
         <span class="time" id="time-${index}">--:--</span>
         <span class="ampm" id="ampm-${index}"></span>
       </div>
-      <div class="weather" id="weather-${index}">Loading weather</div>
-      <div class="offset" id="offset-${index}"></div>`;
+      <div class="time-label">Local time</div>
+      <div class="divider"></div>
+      <div class="weather-row">
+        <div class="weather-icon" id="icon-${index}" aria-hidden="true">${weatherIcon(2)}</div>
+        <div>
+          <div class="temperature-row">
+            <span class="temp-f" id="temp-f-${index}">--°F</span>
+            <span class="temp-c" id="temp-c-${index}">--°C</span>
+          </div>
+          <div class="condition" id="condition-${index}">Loading weather</div>
+        </div>
+      </div>
+      <div class="meta" id="offset-${index}"></div>`;
     grid.appendChild(card);
   });
 }
@@ -179,11 +261,7 @@ function timeParts(date,zone){
   }).formatToParts(date);
 
   const part = type => parts.find(p => p.type === type)?.value || "";
-  return {
-    hour:part("hour"),
-    minute:part("minute"),
-    dayPeriod:part("dayPeriod")
-  };
+  return {hour:part("hour"),minute:part("minute"),dayPeriod:part("dayPeriod")};
 }
 
 function zoneOffsetMinutes(date,zone){
@@ -220,26 +298,27 @@ function zoneOffsetMinutes(date,zone){
 
 function relativeOffset(date,zone){
   const delta = zoneOffsetMinutes(date,zone) - zoneOffsetMinutes(date,BASELINE_ZONE);
-  if(delta === 0) return "";
+  if(delta === 0) return "Chicago time";
 
   const sign = delta > 0 ? "+" : "−";
   const absolute = Math.abs(delta);
   const hours = Math.floor(absolute / 60);
   const minutes = absolute % 60;
+  const amount = minutes
+    ? `${hours}:${String(minutes).padStart(2,"0")}`
+    : `${hours}`;
 
-  return minutes
-    ? `${sign}${hours}:${String(minutes).padStart(2,"0")} hr`
-    : `${sign}${hours} hr`;
+  return `${sign}${amount} hr vs Chicago`;
 }
 
 function updateTimes(){
   const now = new Date();
 
-  clocks.forEach((clock,index) => {
-    const parts = timeParts(now,clock.zone);
+  cities.forEach((city,index) => {
+    const parts = timeParts(now,city.zone);
     document.getElementById(`time-${index}`).textContent = `${parts.hour}:${parts.minute}`;
     document.getElementById(`ampm-${index}`).textContent = parts.dayPeriod;
-    document.getElementById(`offset-${index}`).textContent = relativeOffset(now,clock.zone);
+    document.getElementById(`offset-${index}`).textContent = relativeOffset(now,city.zone);
   });
 }
 
@@ -256,13 +335,41 @@ function weatherLabel(code){
   return "Current weather";
 }
 
-async function fetchWeather(){
-  const weatherEls = clocks.map((_,i) => document.getElementById(`weather-${i}`));
+function weatherIcon(code){
+  const common = `fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 40 40"`;
 
+  if(code === 0){
+    return `<svg ${common}><circle cx="20" cy="20" r="6"/><path d="M20 5v4M20 31v4M5 20h4M31 20h4M9.4 9.4l2.8 2.8M27.8 27.8l2.8 2.8M30.6 9.4l-2.8 2.8M12.2 27.8l-2.8 2.8"/></svg>`;
+  }
+
+  if(code === 45 || code === 48){
+    return `<svg ${common}><path d="M8 14h24M5 20h30M9 26h22"/></svg>`;
+  }
+
+  if([51,53,55,56,57,61,63,65,66,67,80,81,82].includes(code)){
+    return `<svg ${common}><path d="M11 25h17a6 6 0 0 0 .5-12 9 9 0 0 0-17.2 2.3A5 5 0 0 0 11 25Z"/><path d="M14 29l-2 4M21 29l-2 4M28 29l-2 4"/></svg>`;
+  }
+
+  if([71,73,75,77,85,86].includes(code)){
+    return `<svg ${common}><path d="M11 24h17a6 6 0 0 0 .5-12 9 9 0 0 0-17.2 2.3A5 5 0 0 0 11 24Z"/><path d="M13 30h.01M20 30h.01M27 30h.01M16.5 34h.01M23.5 34h.01" stroke-width="3"/></svg>`;
+  }
+
+  if([95,96,99].includes(code)){
+    return `<svg ${common}><path d="M11 24h17a6 6 0 0 0 .5-12 9 9 0 0 0-17.2 2.3A5 5 0 0 0 11 24Z"/><path d="M21 27l-4 6h4l-2 4 6-8h-4l2-2"/></svg>`;
+  }
+
+  if(code === 1 || code === 2){
+    return `<svg ${common}><circle cx="14" cy="14" r="5"/><path d="M14 5v3M5 14h3M7.5 7.5l2.1 2.1M11 27h17a6 6 0 0 0 .5-12 9 9 0 0 0-17.2 2.3A5 5 0 0 0 11 27Z"/></svg>`;
+  }
+
+  return `<svg ${common}><path d="M10 27h18a6.5 6.5 0 0 0 .5-13 9.5 9.5 0 0 0-18 2.5A5.5 5.5 0 0 0 10 27Z"/></svg>`;
+}
+
+async function fetchWeather(){
   try{
     const params = new URLSearchParams({
-      latitude:clocks.map(c => c.lat).join(","),
-      longitude:clocks.map(c => c.lon).join(","),
+      latitude:cities.map(c => c.lat).join(","),
+      longitude:cities.map(c => c.lon).join(","),
       current:"temperature_2m,weather_code",
       temperature_unit:"fahrenheit",
       forecast_days:"1"
@@ -270,7 +377,6 @@ async function fetchWeather(){
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(),10000);
-
     const response = await fetch(`https://api.open-meteo.com/v1/forecast?${params.toString()}`,{
       signal:controller.signal,
       cache:"no-store"
@@ -281,25 +387,29 @@ async function fetchWeather(){
 
     const payload = await response.json();
     const rows = Array.isArray(payload) ? payload : [payload];
-
-    if(rows.length !== clocks.length) throw new Error("Unexpected weather response");
+    if(rows.length !== cities.length) throw new Error("Unexpected weather response");
 
     rows.forEach((row,index) => {
       const tempF = row?.current?.temperature_2m;
       const code = row?.current?.weather_code;
-
-      if(typeof tempF !== "number" || typeof code !== "number") {
-        throw new Error(`Missing weather data for ${clocks[index].name}`);
+      if(typeof tempF !== "number" || typeof code !== "number"){
+        throw new Error(`Missing weather data for ${cities[index].name}`);
       }
 
       const roundedF = Math.round(tempF);
       const roundedC = Math.round((tempF - 32) * 5 / 9);
-      weatherEls[index].textContent = `${roundedF}°F · ${roundedC}°C  ${weatherLabel(code)}`;
+
+      document.getElementById(`temp-f-${index}`).textContent = `${roundedF}°F`;
+      document.getElementById(`temp-c-${index}`).textContent = `${roundedC}°C`;
+      document.getElementById(`condition-${index}`).textContent = weatherLabel(code);
+      document.getElementById(`icon-${index}`).innerHTML = weatherIcon(code);
     });
   }catch(error){
     console.error(error);
-    weatherEls.forEach(el => {
-      el.textContent = "Weather unavailable";
+    cities.forEach((_,index) => {
+      document.getElementById(`temp-f-${index}`).textContent = "--°F";
+      document.getElementById(`temp-c-${index}`).textContent = "--°C";
+      document.getElementById(`condition-${index}`).textContent = "Weather unavailable";
     });
   }
 }
