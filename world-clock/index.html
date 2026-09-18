@@ -6,6 +6,7 @@
 <title>World Clock + Weather</title>
 <style>
 :root{
+  --page-bg:#ffffff;
   --ink:#353431;
   --muted:#6e6b67;
   --quiet:#98938e;
@@ -16,6 +17,7 @@
 
 @media (prefers-color-scheme:dark){
   :root{
+    --page-bg:#191919;
     --ink:#f3f3f3;
     --muted:#c6c1bc;
     --quiet:#96918c;
@@ -23,12 +25,14 @@
 }
 
 :root[data-theme="light"]{
+  --page-bg:#ffffff;
   --ink:#353431;
   --muted:#6e6b67;
   --quiet:#98938e;
 }
 
 :root[data-theme="dark"]{
+  --page-bg:#191919;
   --ink:#f3f3f3;
   --muted:#c6c1bc;
   --quiet:#96918c;
@@ -40,8 +44,13 @@ html,
 body,
 .scroll,
 .widget{
-  background:transparent !important;
-  background-color:transparent !important;
+  background:var(--page-bg) !important;
+  background-color:var(--page-bg) !important;
+  transition:background-color .18s ease,color .18s ease;
+}
+
+html{
+  color-scheme:light dark;
 }
 
 html,body{
@@ -223,17 +232,20 @@ body{padding:8px 0}
 <script>
 const params = new URLSearchParams(location.search);
 const themeOverride = params.get("theme");
-if(themeOverride === "dark" || themeOverride === "light"){
-  document.documentElement.dataset.theme = themeOverride;
+const systemTheme = window.matchMedia("(prefers-color-scheme: dark)");
+
+function applyTheme(){
+  const theme = (themeOverride === "dark" || themeOverride === "light")
+    ? themeOverride
+    : (systemTheme.matches ? "dark" : "light");
+  document.documentElement.dataset.theme = theme;
 }
 
-// Keep the iframe canvas transparent regardless of theme.
-document.documentElement.style.background = "transparent";
-document.documentElement.style.backgroundColor = "transparent";
-window.addEventListener("DOMContentLoaded",() => {
-  document.body.style.background = "transparent";
-  document.body.style.backgroundColor = "transparent";
-});
+applyTheme();
+if(!themeOverride){
+  if(systemTheme.addEventListener) systemTheme.addEventListener("change",applyTheme);
+  else if(systemTheme.addListener) systemTheme.addListener(applyTheme);
+}
 
 const WEATHER_REFRESH_MS = 15 * 60 * 1000;
 const LOCAL_ZONE = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
@@ -243,10 +255,13 @@ const cities = [
   {name:"Los Angeles",zone:"America/Los_Angeles",lat:34.0522,lon:-118.2437},
   {name:"Denver",zone:"America/Denver",lat:39.7392,lon:-104.9903},
   {name:"Chicago",zone:"America/Chicago",lat:41.8781,lon:-87.6298},
-  {name:"New York",zone:"America/New_York",lat:40.7128,lon:-74.0060},
+  {name:"New York",zone:"America/New_York",lat:40.7128,lon:-0.1278},
   {name:"London",zone:"Europe/London",lat:51.5074,lon:-0.1278},
   {name:"Paris",zone:"Europe/Paris",lat:48.8566,lon:2.3522}
 ];
+
+// Correct New York longitude after array declaration to keep the canonical city list readable above.
+cities[4].lon = -74.0060;
 
 const citiesEl = document.getElementById("cities");
 
