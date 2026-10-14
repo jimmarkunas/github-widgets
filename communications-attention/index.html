@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
+  <title>LIFE OS — Communications Attention (Synthetic Demo)</title>
+  <style>
+    :root{color-scheme:light dark;--fg:#25272b;--muted:#70757e;--hair:#e9eaf0;--hover:#f6f7f9;--link:#1d4f97;--alert:#a46812;--focus:#2966b5}
+    @media(prefers-color-scheme:dark){:root{--fg:#efeff2;--muted:#a6abb5;--hair:#383b41;--hover:#24272d;--link:#8dbdff;--alert:#f6c978;--focus:#a9caff}}
+    *,:before,:after{box-sizing:border-box}
+    html,body{margin:0;width:100%;min-height:100%;background:transparent;color:var(--fg);font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,sans-serif}
+    .wrap{padding:12px 14px 10px;max-width:860px}
+    .notice{border-radius:6px;background:var(--hover);color:var(--muted);font-size:11px;padding:6px 8px;margin-bottom:9px}
+    header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:2px 4px 11px}
+    h1{display:flex;align-items:center;gap:8px;margin:0;font-size:15px;font-weight:700;letter-spacing:-.015em}
+    .glyph{font-size:18px;line-height:1}
+    .controls{display:flex;align-items:center;gap:9px}
+    .stamp{font-size:11px;color:var(--muted);white-space:nowrap}
+    button{border:0;border-radius:5px;padding:5px 7px;color:var(--muted);background:none;font:inherit;font-size:12px;cursor:pointer}
+    button:hover{color:var(--fg);background:var(--hover)}
+    button:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+    .list{border-top:1px solid var(--hair)}
+    .channel{display:grid;grid-template-columns:minmax(146px,1fr) minmax(120px,1.4fr) auto;align-items:center;column-gap:13px;min-height:45px;padding:9px 5px;border-bottom:1px solid var(--hair)}
+    .channel-name{display:flex;align-items:center;gap:10px;min-width:0;font-weight:600}
+    .ch-icon{display:grid;place-items:center;width:24px;height:24px;min-width:24px;border-radius:7px;font-size:13px;font-weight:750;background:var(--hover)}
+    .ch-icon.telegram{color:#229ed9}.ch-icon.whatsapp{color:#249d62}.ch-icon.discord{color:#7584e6}
+    .name{color:var(--fg)}
+    .latest{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left;color:var(--fg)}
+    .latest.empty{color:var(--muted)}
+    .health{color:var(--muted);font-size:11px;text-align:right;white-space:nowrap}
+    .health.degraded{color:var(--alert)}
+    footer{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;color:var(--muted);padding:11px 5px 1px;font-size:11px}
+    @media(max-width:520px){.wrap{padding:9px 6px 8px}.channel{grid-template-columns:minmax(120px,1fr) minmax(95px,1.3fr);gap:3px 8px}.health{grid-column:2;text-align:left;font-size:10px}.stamp{display:none}footer{font-size:10px}}
+    @media(prefers-reduced-motion:no-preference){button:active{transform:scale(.96)}}
+  </style>
+</head>
+<body>
+  <main class="wrap" aria-labelledby="heading">
+    <div class="notice">DESIGN PROTOTYPE — synthetic contacts and counts. No real messages, accounts or private data.</div>
+    <header>
+      <h1 id="heading"><span class="glyph" aria-hidden="true">💬</span>Communications Attention</h1>
+      <div class="controls"><span class="stamp" id="stamp">Synthetic preview</span><button id="refresh" type="button" aria-label="Redraw synthetic preview">↻ Preview</button></div>
+    </header>
+    <div class="list" id="channels" aria-live="polite"></div>
+    <footer><span role="status" id="status">SYNTHETIC DEMO · No live data connection</span><span>🔒 Private data integration not enabled</span></footer>
+  </main>
+  <script>
+    'use strict';
+    // PUBLIC DESIGN DEMO ONLY. No fetch(), real identifiers, credentials, data endpoint or outbound network calls.
+    // Future real data must use a separately proven authenticated private origin, not GitHub Pages.
+    const CHANNELS=[
+      {id:'messages',name:'Messages',icon:'▤',unread_count:5,count_reliable:true,latest_contact:'Sample Contact A',health:'CURRENT'},
+      {id:'telegram',name:'Telegram',icon:'➤',unread_count:3,count_reliable:true,latest_contact:'Sample Contact B',health:'CURRENT'},
+      {id:'whatsapp',name:'WhatsApp',icon:'✆',unread_count:null,count_reliable:false,latest_contact:null,health:'UNAVAILABLE'},
+      {id:'discord',name:'Discord',icon:'◉',unread_count:0,count_reliable:true,latest_contact:'Sample Contact C',health:'CURRENT'}
+    ];
+    function el(tag,cls,value){const e=document.createElement(tag);if(cls)e.className=cls;if(value!==undefined)e.textContent=String(value);return e}
+    function draw(){
+      const target=document.getElementById('channels');target.replaceChildren();
+      for(const source of CHANNELS){
+        const reliable=source.health==='CURRENT'&&source.count_reliable===true&&Number.isSafeInteger(source.unread_count)&&source.unread_count>=0;
+        const count=reliable?(source.unread_count>99?'99+':String(source.unread_count)):'—';
+        const row=el('div','channel'),left=el('div','channel-name');
+        left.append(el('span','ch-icon '+source.id,source.icon),el('span','name',source.name+' ('+count+')'));
+        const latest=el('span','latest'+(source.latest_contact?'':' empty'),source.latest_contact||'Latest contact unavailable');
+        const health=el('span','health'+(source.health==='DEGRADED'?' degraded':''),source.health==='CURRENT'?'':source.health.charAt(0)+source.health.slice(1).toLowerCase());
+        row.append(left,latest,health);target.append(row);
+      }
+      document.getElementById('stamp').textContent='Synthetic preview · no timestamp';
+      document.getElementById('status').textContent='SYNTHETIC DEMO · Unverified ≠ zero · App links disabled until proven';
+    }
+    document.getElementById('refresh').addEventListener('click',draw);
+    draw();
+  </script>
+</body>
+</html>
