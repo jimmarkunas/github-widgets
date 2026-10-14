@@ -23,7 +23,7 @@
     button:hover{color:var(--fg);background:var(--hover)}
     button:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
     .list{border-top:1px solid var(--hair)}
-    .channel{display:grid;grid-template-columns:minmax(175px,235px) minmax(0,1fr) minmax(90px,110px);align-items:center;column-gap:13px;min-height:45px;padding:9px 5px;border-bottom:1px solid var(--hair)}
+    .channel{display:grid;grid-template-columns:minmax(175px,235px) minmax(0,1fr);align-items:center;column-gap:13px;min-height:45px;padding:9px 5px;border-bottom:1px solid var(--hair)}
     .channel-name{display:flex;align-items:center;gap:10px;min-width:0;font-weight:600}
     .ch-icon{display:grid;place-items:center;width:24px;height:24px;min-width:24px;border-radius:7px;font-size:13px;font-weight:750;background:var(--hover)}
     .ch-icon.telegram{color:#229ed9}.ch-icon.whatsapp{color:#249d62}.ch-icon.discord{color:#7584e6}
@@ -33,10 +33,8 @@
     .name-link:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
     .latest{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left;color:var(--fg)}
     .latest.empty{color:var(--muted)}
-    .health{color:var(--muted);font-size:11px;text-align:right;white-space:nowrap}
-    .health.degraded{color:var(--alert)}
     footer{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;color:var(--muted);padding:11px 5px 1px;font-size:11px}
-    @media(max-width:520px){.wrap{padding:9px 6px 8px}.channel{grid-template-columns:minmax(125px,40%) minmax(0,1fr);gap:3px 8px}.health{grid-column:2;text-align:left;font-size:10px}.stamp{display:none}footer{font-size:10px}}
+    @media(max-width:520px){.wrap{padding:9px 6px 8px}.channel{grid-template-columns:minmax(125px,40%) minmax(0,1fr);gap:3px 8px}.stamp{display:none}footer{font-size:10px}}
     @media(prefers-reduced-motion:no-preference){button:active{transform:scale(.96)}}
   </style>
 </head>
@@ -86,9 +84,14 @@
           });
         }
         left.append(action);
-        const latest=el('span','latest'+(source.latest_contact?'':' empty'),source.latest_contact||'Latest contact unavailable');
-        const health=el('span','health'+(source.health==='DEGRADED'?' degraded':''),source.health==='CURRENT'?'':source.health.charAt(0)+source.health.slice(1).toLowerCase());
-        row.append(left,latest,health);target.append(row);
+        // One contextual second column: the latest verified contact OR an explicit health/identity gap.
+        const healthy=source.health==='CURRENT';
+        const latestLabel=healthy
+          ? (source.latest_contact||'Latest contact unavailable')
+          : source.health.charAt(0)+source.health.slice(1).toLowerCase()+' · latest contact unknown';
+        const latest=el('span','latest'+(!healthy||!source.latest_contact?' empty':''),latestLabel);
+        latest.setAttribute('aria-label','Latest incoming contact: '+latestLabel);
+        row.append(left,latest);target.append(row);
       }
       if(isRefresh)refreshCount++;
       const now=new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit',second:'2-digit'});
