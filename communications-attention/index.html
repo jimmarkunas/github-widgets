@@ -8,8 +8,8 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
   <title>LIFE OS — Communications Attention (Synthetic Demo)</title>
   <style>
-    :root{color-scheme:light dark;--fg:#25272b;--muted:#70757e;--hair:#e9eaf0;--hover:#f6f7f9;--link:#1d4f97;--alert:#a46812;--focus:#2966b5}
-    @media(prefers-color-scheme:dark){:root{--fg:#efeff2;--muted:#a6abb5;--hair:#383b41;--hover:#24272d;--link:#8dbdff;--alert:#f6c978;--focus:#a9caff}}
+    :root{color-scheme:light dark;--fg:#25272b;--muted:#70757e;--hair:#e9eaf0;--hover:#f6f7f9;--link:#1d4f97;--alert:#a46812;--focus:#2966b5;--connected:#178a54;--connection-issue:#d24545;--connection-unknown:#7b8792}
+    @media(prefers-color-scheme:dark){:root{--fg:#efeff2;--muted:#a6abb5;--hair:#383b41;--hover:#24272d;--link:#8dbdff;--alert:#f6c978;--focus:#a9caff;--connected:#51c787;--connection-issue:#ff7474;--connection-unknown:#a6abb5}}
     *,:before,:after{box-sizing:border-box}
     html,body{margin:0;width:100%;min-height:100%;background:transparent;color:var(--fg);font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,sans-serif}
     .wrap{width:100%;max-width:none;padding:12px 14px 10px}
@@ -25,6 +25,10 @@
     .list{border-top:1px solid var(--hair)}
     .channel{display:grid;grid-template-columns:minmax(175px,235px) minmax(0,1fr);align-items:center;column-gap:13px;min-height:45px;padding:9px 5px;border-bottom:1px solid var(--hair)}
     .channel-name{display:flex;align-items:center;gap:10px;min-width:0;font-weight:600}
+    .channel-action{display:inline-flex;align-items:center;gap:9px;min-width:0}
+    .connection-dot{display:inline-block;flex:0 0 9px;width:9px;height:9px;border-radius:50%;background:var(--connection-unknown);box-shadow:0 0 0 1px rgba(0,0,0,.09)}
+    .connection-dot.connected{background:var(--connected)}
+    .connection-dot.issue{background:var(--connection-issue)}
     .ch-icon{display:grid;place-items:center;width:24px;height:24px;min-width:24px;border-radius:7px;font-size:13px;font-weight:750;background:var(--hover)}
     .ch-icon.telegram{color:#229ed9}.ch-icon.whatsapp{color:#249d62}.ch-icon.discord{color:#7584e6}
     .name{color:var(--fg)}
@@ -34,7 +38,8 @@
     .latest{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left;color:var(--fg)}
     .latest.empty{color:var(--muted)}
     footer{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;color:var(--muted);padding:11px 5px 1px;font-size:11px}
-    @media(max-width:520px){.wrap{padding:9px 6px 8px}.channel{grid-template-columns:minmax(125px,40%) minmax(0,1fr);gap:3px 8px}.stamp{display:none}footer{font-size:10px}}
+    @media(max-width:520px){.wrap{padding:9px 6px 8px}.channel{grid-template-columns:minmax(175px,47%) minmax(0,1fr);gap:3px 8px}.stamp{display:none}footer{font-size:10px}}
+    @media(max-width:380px){.ch-icon{display:none}.channel{grid-template-columns:minmax(148px,49%) minmax(0,1fr)}}
     @media(prefers-reduced-motion:no-preference){button:active{transform:scale(.96)}}
   </style>
 </head>
@@ -52,10 +57,10 @@
     // PUBLIC DESIGN DEMO ONLY. No fetch(), real identifiers, credentials, data endpoint or outbound network calls.
     // Future real data must use a separately proven authenticated private origin, not GitHub Pages.
     const CHANNELS=[
-      {id:'messages',name:'Messages',icon:'▤',unread_count:5,count_reliable:true,latest_contact:'Sample Contact A',health:'CURRENT'},
-      {id:'telegram',name:'Telegram',icon:'➤',unread_count:3,count_reliable:true,latest_contact:'Sample Contact B',health:'CURRENT',web_url:'https://web.telegram.org/'}, 
-      {id:'whatsapp',name:'WhatsApp',icon:'✆',unread_count:null,count_reliable:false,latest_contact:null,health:'UNAVAILABLE',web_url:'https://web.whatsapp.com/'}, 
-      {id:'discord',name:'Discord',icon:'◉',unread_count:0,count_reliable:true,latest_contact:'Sample Contact C',health:'CURRENT',web_url:'https://discord.com/channels/@me'}
+      {id:'messages',name:'Messages',icon:'▤',unread_count:5,count_reliable:true,latest_contact:'Sample Contact A',health:'CURRENT',connection_state:'CONNECTED'},
+      {id:'telegram',name:'Telegram',icon:'➤',unread_count:3,count_reliable:true,latest_contact:'Sample Contact B',health:'CURRENT',connection_state:'CONNECTED',web_url:'https://web.telegram.org/'}, 
+      {id:'whatsapp',name:'WhatsApp',icon:'✆',unread_count:null,count_reliable:false,latest_contact:null,health:'DISCONNECTED',connection_state:'ISSUE',web_url:'https://web.whatsapp.com/'}, 
+      {id:'discord',name:'Discord',icon:'◉',unread_count:0,count_reliable:true,latest_contact:'Sample Contact C',health:'CURRENT',connection_state:'CONNECTED',web_url:'https://discord.com/channels/@me'}
     ];
     function el(tag,cls,value){const e=document.createElement(tag);if(cls)e.className=cls;if(value!==undefined)e.textContent=String(value);return e}
     let refreshCount=0;
@@ -83,12 +88,21 @@
             document.getElementById('status').textContent='Messages: open Messages.app from your Mac Dock. A reliable Notion launch link is not verified.';
           });
         }
-        left.append(action);
-        // One contextual second column: the latest verified contact OR an explicit health/identity gap.
+        const actionGroup=el('span','channel-action');
+        actionGroup.append(action);
+        // Connection health is independently declared; never infer 'connected' from an unread count.
+        // Unknown or unverified status is gray rather than silently claiming a good or bad connection.
+        const conn=source.connection_state==='CONNECTED'?'connected':source.connection_state==='ISSUE'?'issue':'unknown';
+        const connLabel=conn==='connected'?'Connected':conn==='issue'?'Connection issue':'Connection unverified';
+        const dot=el('span','connection-dot '+conn);
+        dot.setAttribute('role','img');
+        dot.setAttribute('aria-label',connLabel+' (synthetic example)');
+        dot.title=connLabel+' (synthetic example)';
+        actionGroup.append(dot);
+        left.append(actionGroup);
+        // Second and only other column: the newest verified incoming contact or honest unavailable. 
         const healthy=source.health==='CURRENT';
-        const latestLabel=healthy
-          ? (source.latest_contact||'Latest contact unavailable')
-          : source.health.charAt(0)+source.health.slice(1).toLowerCase()+' · latest contact unknown';
+        const latestLabel=healthy&&source.latest_contact?source.latest_contact:'Latest contact unavailable';
         const latest=el('span','latest'+(!healthy||!source.latest_contact?' empty':''),latestLabel);
         latest.setAttribute('aria-label','Latest incoming contact: '+latestLabel);
         row.append(left,latest);target.append(row);
